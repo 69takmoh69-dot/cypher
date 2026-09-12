@@ -1,0 +1,68 @@
+// Cypher — database schema
+// Session-based membership: no accounts, no passwords. A visitor gets an
+// httpOnly-cookie session on first request; entering a valid unlock code
+// flips that session's `isMember` flag server-side.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model UnlockCode {
+  id        String   @id @default(cuid())
+  code      String   @unique // format: CYPHER-XXXXXXXX
+  maxUses   Int      @default(1)
+  usedCount Int      @default(0)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  redemptions Session[]
+
+  @@index([isActive])
+}
+
+model Session {
+  id           String    @id @default(cuid())
+  sessionId    String    @unique // value stored in the httpOnly cookie
+  isMember     Boolean   @default(false)
+  unlockedAt   DateTime?
+  unlockCodeId String?
+  unlockCode   UnlockCode? @relation(fields: [unlockCodeId], references: [id])
+  createdAt    DateTime  @default(now())
+  lastSeenAt   DateTime  @default(now())
+
+  projects         Project[]
+  missionProgress  MissionProgress[]
+
+  @@index([unlockCodeId])
+}
+
+model Project {
+  id         String   @id @default(cuid())
+  sessionId  String
+  session    Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  studioId   String
+  title      String
+  inputData  Json
+  outputData Json
+  createdAt  DateTime @default(now())
+
+  @@index([sessionId])
+  @@index([studioId])
+}
+
+model MissionProgress {
+  id          String   @id @default(cuid())
+  sessionId   String
+  session     Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  missionId   String
+  currentStep Int      @default(0)
+  completed   Boolean  @default(false)
+  updatedAt   DateTime @updatedAt
+
+  @@unique([sessionId, missionId])
+}

@@ -1,0 +1,44 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    @apply border-surface-border;
+  }
+  html {
+    color-scheme: dark;
+  }
+  body {
+    @apply bg-void text-ink antialiased;
+  }
+  ::selection {
+    background: rgba(255, 0, 60, 0.35);
+    color: #fff;
+  }
+  :focus-visible {
+    outline: 2px solid #ff003c;
+    outline-offset: 2px;
+  }
+}
+
+@layer utilities {
+  /* Restrained scanline texture over the void background — never more than
+     a few percent opacity, purely atmospheric, never load-bearing for content. */
+  .cypher-grid {
+    background-image:
+      linear-gradient(rgba(255, 0, 60, 0.035) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 0, 60, 0.035) 1px, transparent 1px);
+    background-size: 42px 42px;
+  }
+
+  .cypher-glow-text {
+    text-shadow: 0 0 24px rgba(255, 0, 60, 0.35);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .cypher-rain-column {
+      animation: none !important;
+    }
+  }
+}
